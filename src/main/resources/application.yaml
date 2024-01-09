@@ -1,0 +1,59 @@
+debug: false
+
+#액츄에이터의 엔드포인트 중 감춰져 있는 녀석을 모두 활성화
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    com.fastcampus.projectboard: debug #여기서 발생하는 모든 로그들은 디버그 레벨로  보겠다.
+    org.springframework.web.servlet: debug # 해당하는 디버그가 어떤 패키지로부터 오는 지를 조사 가능. 다른 기능은 냅두고 리퀘스트, 리스폰스 로그만 디버그로 따로 뽑기
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    # JPA 기술을 사용할 때 Query 로그를 디버그 로그로 관찰할 수 있는데,
+    #이때 안에 들어가는 바인딩 파라미터들은 다 물음표로 나오고 실제로 어떤 파라미터가 들어가는지는 보이지 않게 된다. 기본적으로는
+    #그 파라미터를 관찰 할 수 있게 해주는 로깅 레벨
+
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/board
+    username: bno
+    password: testpw
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    defer-datasource-initialization: true # 테스트용 데이터베이스 데이터를 만들 수 있게끔
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true # 한 줄로 나와야 되는 디버그 쿼리문을 예쁘게 포맷팅
+        default_batch_fetch_size: 100 # 복잡한 연관관계가 맵핑 되어 있는 쿼리를 사용할 때 한 번에 bulk로 셀렉르 해올 수 있게끔 만들어줌
+        #예를 들어 테이블 안에 조인 테이블로 가져가야 하는 column , Row 수가 10개 정도이다. 그럼 쿼리가 10개까지 만들어질 수 있는데
+        #10개의 쿼리를 id in 쿼리로 바꿔줘서 한번의 셀렉트 문으로 나갈 수 있게 만들어준다.
+        # 최대 값을 100으로 줘서, 최대 100개의 단위로 묶어서 bulk로 셀렉트 할 수 있게끔 잡아준다.
+  h2:
+    console:
+      enabled: true
+
+  sql:
+    init:
+      mode: always #리소스 폴더 안의 data.sql을 언제 작동시킬 것이냐 에 대한 룰
+      #Embedded면 Embedded DB로 사용될 때만 작동시킨다 : 테스트 환경에서만 작동
+
+---
+#yaml은 ---을 통해 도큐먼트를 여러 개 만들 수 잇다.
+spring:
+  config:
+    activate:
+      on-profile: testdb
+  #datasource:
+  #  url: jdbc:h2:mem:testdb;mode=mysql
+  #  driver-class-name: org.h2.Driver
+  #sql:
+  #  init:
+  #    mode: always
+  #test.database.replace: none
